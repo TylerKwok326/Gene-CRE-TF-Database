@@ -1,0 +1,8 @@
+name: nextflow_base
+channels:
+- conda-forge
+- bioconda 
+
+dependencies:
+- nextflow=24.04.2
+- nf-test=0.8.4
