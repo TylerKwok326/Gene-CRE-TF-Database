@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Genomic Interactions Database</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="{{ url_for('index') }}" class="logo">
+            <i class="fas fa-dna"></i>
+            GeneInteract
+        </a>
+        <div class="nav-links">
+            <a href="{{ url_for('index') }}">Home</a>
+            <a href="{{ url_for('search_page') }}">Search</a>
+            <a href="{{ url_for('visualizations') }}">Visualizations</a>
+            <a href="{{ url_for('guide') }}">Help</a>
+            <a href="{{ url_for('faq') }}">FAQ</a>
+            <a href="{{ url_for('github') }}">GitHub</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Introduction Hero -->
+        <section id="home" class="hero">
+            <h1>Genomic Interactions Database</h1>
+            <p>A comprehensive resource for exploring gene regulatory elements and their interactions across diverse biological contexts and disease states.</p>
+            <a href="{{ url_for('search') }}" class="button">
+                <i class="fas fa-search"></i>
+                Start Exploring
+            </a>
+        </section>
+        <!-- Feature Section -->
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-project-diagram"></i>
+                </div>
+                <h3>Network Analysis</h3>
+                <p>Explore comprehensive transcription factor and gene regulatory networks with interactive visualizations.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-disease"></i>
+                </div>
+                <h3>Disease Insights</h3>
+                <p>Discover gene-disease associations through regulatory interactions across multiple tissues and conditions.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3>Expression Data</h3>
+                <p>Access integrated multi-omics data and expression profiles to guide your research hypothesis.</p>
+            </div>
+        </div>
+
+        <!-- Help Section -->
+        <section id="help" class="card">
+            <h2>Help & Documentation</h2>
+            <p>Find information on how to effectively use the Genomic Interactions Database for your research.</p>
+            
+            <div class="grid-2">
+                <div>
+                    <h3>Quick Start Guide</h3>
+                    <p>Learn how to navigate the database interface and perform basic queries to find relevant genomic interactions.</p>
+                    <a href="{{ url_for('guide') }}" class="button">View Guide</a>
+                </div>
+                <div>
+                    <h3>FAQ</h3>
+                    <p>Find answers to commonly asked questions about data sources, analysis methods, and interpretation of results.</p>
+                    <a href="{{ url_for('faq') }}" class="button">View FAQs</a>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>About</h3>
+                <a href="{{ url_for('aboutus') }}">About Us</a>
+            </div>
+            <div class="footer-section">
+                <h3>Resources</h3>
+                <a href="{{ url_for('resources') }}">Data</a>
+            </div>
+            <div class="footer-section">
+                <h3>Connect</h3>
+                <a href="{{ url_for('contactus') }}">Contact</a>
+            </div>
+            <div class="footer-section">
+                <h3>Legal</h3>
+                <a href="{{ url_for('citation') }}">Citations</a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

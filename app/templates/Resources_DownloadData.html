@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Genomic Interactions Database - Data Downloads</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="{{ url_for('index') }}" class="logo">
+            <i class="fas fa-dna"></i>
+            GeneInteract
+        </a>
+        <div class="nav-links">
+            <a href="{{ url_for('index') }}">Home</a>
+            <a href="{{ url_for('search_page') }}">Search</a>
+            <a href="{{ url_for('visualizations') }}">Visualizations</a>
+            <a href="{{ url_for('guide') }}">Help</a>
+            <a href="{{ url_for('faq') }}">FAQ</a>
+            <a href="{{ url_for('github') }}">GitHub</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Introduction Hero -->
+        <section class="hero">
+            <h1>Database Datasets</h1>
+            <p>Access genomic datasets used in this database to support your research on gene regulatory interactions and disease associations.</p>
+            <a href="#dataset-list" class="button">
+                <i class="fas fa-file-code"></i>
+                View Datasets
+            </a>
+        </section>
+
+        <!-- Dataset List Section -->
+        <section id="dataset-list" class="card">
+            <h2>Available Datasets</h2>
+            <p>The following datasets are available for download. Each dataset contains genomic interaction data from various experimental conditions and biological contexts.</p>
+            
+            <div class="dataset-container">
+                <!-- Dataset 1 -->
+                <div class="dataset-item">
+                    <h3>IFN-beta Stimulated Microglia</h3>
+                    <p><strong>Condition:</strong> IFN-beta stimulated</p>
+                    <p><strong>Detail:</strong> ATAC-seq for both resting and IFN-beta stimulated human iPSC and ESC-derived microglia</p>
+                    <p><strong>ID:</strong> GSE206479</p>
+                    <p><strong>Year:</strong> 2023</p>
+                    <p><strong>Publication:</strong> Yang X, Wen J, Yang H, Jones IR et al. Functional characterization of Alzheimer's disease-related chromatin modifications in human microglia.</p>
+                    <p><strong>Sequencing Type:</strong> ATAC-seq, RNA-seq</p>
+                    <a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE173316" target="_blank">
+                        <i class="fas fa-external-link-alt"></i> Access Dataset
+                    </a>
+                </div>
+
+                <!-- Dataset 2 -->
+                <div class="dataset-item">
+                    <h3>AD Mutant Microglia</h3>
+                    <p><strong>Condition:</strong> AD mutant</p>
+                    <p><strong>Detail:</strong> Isogenic human ES-derived microglia-like cell lines (hMGLs) harboring AD variants in CD33, INPP5D, SORL1 and TREM2 loci</p>
+                    <p><strong>ID:</strong> GSE153658</p>
+                    <p><strong>Year:</strong> 2020</p>
+                    <p><strong>Publication:</strong> Liu T, Zhu B, Liu Y, Zhang X et al. Multi-omic comparison of Alzheimer's variants in human ESC-derived microglia reveals convergence at APOE</p>
+                    <p><strong>Sequencing Type:</strong> ATAC-seq, RNA-seq, ChIP-seq and proteomics</p>
+                    <a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE153658" target="_blank">
+                        <i class="fas fa-external-link-alt"></i> Access Dataset
+                    </a>
+                </div>
+
+                <!-- Dataset 3 -->
+                <div class="dataset-item">
+                    <h3>Co-cultured and Xenotransplanted Microglia</h3>
+                    <p><strong>Condition:</strong> Co-cultured with cerebral organoid, or xenotransplanted into mouse</p>
+                    <p><strong>Detail:</strong> iPSC-derived microglia (EC11), co-cultured with cerebral organoid, or 7 days, 12 days or 8 weeks post-xenotransplantion into mouse</p>
+                    <p><strong>ID:</strong> GSE226690</p>
+                    <p><strong>Year:</strong> 2023</p>
+                    <p><strong>Publication:</strong> Han CZ et. al. Human microglia maturation is underpinned by specific gene regulatory networks.</p>
+                    <p><strong>Sequencing Type:</strong> RNA-seq, scRNA-seq, ATAC-seq, scATAC-seq, ChIP-seq</p>
+                    <a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE226690" target

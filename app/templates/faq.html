@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ - Genomic Interactions Database</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="{{ url_for('index') }}" class="logo">
+            <i class="fas fa-dna"></i>
+            GeneInteract
+        </a>
+        <div class="nav-links">
+            <a href="{{ url_for('index') }}">Home</a>
+            <a href="{{ url_for('search_page') }}">Search</a>
+            <a href="{{ url_for('visualizations') }}">Visualizations</a>
+            <a href="{{ url_for('guide') }}">Help</a>
+            <a href="{{ url_for('faq') }}">FAQ</a>
+            <a href="{{ url_for('github') }}">GitHub</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <section class="card">
+            <div class="hero">
+                <h1>Frequently Asked Questions</h1>
+                <p>Find answers to common questions about using the database</p>
+            </div>
+
+            <div class="form-section">
+                <h2 class="form-section-title">General Questions</h2>
+                    
+                <div class="accordion">
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion('faq1', this)">
+                            <span>What types of data can I extract from this database?</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div id="faq1" class="accordion-content">
+                            <p>Our databae provides the following data types:</p>
+                            <ul class="feature-list">
+                                <li>Gene expression profiles across conditions</li>
+                                <li>CRE genomic coordinates and activity states</li>
+                                <li>TF binding interactions and networks</li>
+                                <li>Pathway associations for genes</li>
+                                <li>Disease-specific regulatory relationships</li>
+                            </ul>
+                        </div>
+                    </div>  
+
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion('faq2', this)">
+                        <span>How current is the data in this database?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div id="faq2" class="accordion-content">
+                        <p>We maintain our database through regular updates:</p>
+                        <ul class="feature-list">
+                            <li>Quarterly updates from published studies</li>
+                            <li>New ATAC-seq/CUT&Tag data from collaborators</li>
+                            <li>Monthly TF interaction updates from STRING DB</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion('faq3', this)">
+                        <span>Can I search using multiple conditions or cell types at once?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div id="faq3" class="accordion-content">
+                        <p>Unfortunately, no. You'll have to conduct search in one at a time. The current database only supports one condition and one cell type per query.</p>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion('faq4', this)">
+                        <span>What are some limitations of the database?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div id="faq4" class="accordion-content">
+                        <p>Some limitation our database faces:</p>
+                        <ul class="feature-list">
+                            <li>Limited conditions</li>
+                            <li>Limited cell type</li>
+                            <li>Ability to incorportate external data</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion('faq5', this)">
+                        <span>Where can I report error or suggest improvements?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div id="faq5" class="accordion-content">
+                        <p>Your feedbacks are valuable to us. If you spot any errors or have suggestions, please find our contact details in the "About US" page, under the "Contact Our Team" tab.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h2 class="form-section-title">Technical Questions/ Troubleshooting</h2>
+            
+            <div class="accordion">
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion('faq6', this)">
+                        <span>How are CRE-gene interactions determined?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div id="faq6" class="accordion-content">
+                        <p>We use three complementary methods:</p>
+                        <ol class="feature-list">
+                            <li>Physical proximity (within 500kb of TSS)</li>
+                            <li>Hi-C chromatin interaction data</li>
+                            <li>TF-mediated co-regulation evidence</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion('faq10', this)">
+                        <span>Which experimental conditions are available for each cell type?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div id="faq10" class="accordion-content">
+                        <p>The database currently includes the following cell types and conditions:</p>
+                        <strong>iPSC Microglia</strong>
+                        <ul class="feature-list">
+                            <li>IFN treatment</li>
+                            <li>TREM2 R47H mutation</li>
+                            <li>TREM2 knockout (KO)</li>
+                        </ul>
+                        <strong>ESC Microglia</strong>
+                        <ul class="feature-list">
+                            <li>IFN treatment</li>
+                            <li>Xenotransplantation (7 days)</li>
+                            <li>Coculture assay</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion('faq7', this)">
+                        <span>Why am I only getting the selected condition and cell type in the results?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div id="faq7" class="accordion-content">
+                        <p>Ensure you have selected at least one option in the "Include in Results" field.</p>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion('faq8', this)">
+                        <span>What do I do if the website is slow during a large query?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div id="faq8" class="accordion-content">
+                        <p> You may shorten wait times by appling additional search parameters to narrow down your query. </p>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion('faq9', this)">
+                        <span>How do I handle ambiguous gene symbols (e.g, "MALAT1" vs. "NEAT1")?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div id="faq9" class="accordion-content">
+                        <p>The database accepts Gene Symbol, Entrez ID, or Ensembl ID. We recommend using Entrez or Ensembl IDs to avoid ambiguity.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        function toggleAccordion(id, header) {
+            const content = document.getElementById(id);
+            const icon = header.querySelector('i');
+            content.classList.toggle('active');
+            icon.classList.toggle('rotate-180');
+        }
+    </script>
+</body>
+</html>

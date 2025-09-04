@@ -1,0 +1,32 @@
+{% if table_html is not none %}
+<div class="results-container" id="results-container">
+    <section class="card">
+        {{ table_html|safe }}
+
+        {% if active_tab in ['gene', 'cre', 'tf'] %}
+        <div class="export-options">
+            {% if result_id %}
+            <form action="{{ url_for('save_current_result', result_id=result_id) }}" method="POST" class="inline-form">
+                <input type="hidden" name="search_type" value="{{ active_tab }}">
+                <input type="hidden" name="condition" value="{{ condition }}">
+                <input type="hidden" name="cell_type" value="{{ cell_type }}">
+                <button type="submit" class="button">
+                    <i class="fas fa-save"></i> Save to Downloads
+                </button>
+            </form>
+            {% endif %}
+            <button class="button" onclick="exportTableToCSV()">
+                <i class="fas fa-download"></i> Export to CSV
+            </button>
+            <a href="{{ url_for('downloads') }}" class="button" style="background-color: #6c757d;">
+                <i class="fas fa-list"></i> View All Downloads
+            </a>
+        </div>
+        {% endif %}
+    </section>
+</div>
+{% else %}
+<p>No results found.</p>
+{% endif %}
+
+ 
