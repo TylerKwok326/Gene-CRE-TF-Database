@@ -1,0 +1,549 @@
+# Source functions
+```{r}
+source('functions.R')
+```
+
+# Store metadata 
+```{r}
+ifnb_study <- getGEO('GSE206478', GSEMatrix = TRUE)
+ifnb_study <- ifnb_study[[1]]
+ifnb_metadata <- get_metdata('GSE206478', TRUE, 1)
+```
+
+# Get count matrix
+```{r}
+ifnb_count_matrix <- get_count_matrix('../IFNB_study/GSE206478_raw_counts_GRCh38.p13_NCBI.tsv', colname = 'GeneID')
+```
+
+
+# Include only wanted rows/samples from metadata
+```{r}
+#IFNB Study, WTC11-derived microglia
+ifnb_filtered_metadata_WTC11 <- filter_metadata(ifnb_metadata,'title','group:ch1',n=4)
+ifnb_filtered_metadata_WTC11 <- ifnb_filtered_metadata_WTC11[!row.names(ifnb_filtered_metadata_WTC11) %in% "GSM6255119", ]
+```
+```{r}
+#IFNB Study, H1-derived microglia
+ifnb_filtered_metadata_H1 <- filter_metadata(ifnb_metadata,'title','group:ch1',n=4, filter_type='tail')
+```
+
+
+# Include only wanted columns/samples from count matrix
+```{r}
+#IFNB study 
+ifnb_filtered_count_matrix_WTC11 <- filter_non_zero(ifnb_count_matrix,n=2,start=1,end=3)
+ifnb_filtered_count_matrix_H1 <- filter_non_zero(ifnb_count_matrix,n=2,start=4,end=7)
+```
+
+
+# Run DESEq2 and get results
+```{r}
+WTC11_results <- deseq_results(ifnb_filtered_metadata_WTC11, ifnb_filtered_count_matrix_WTC11, 'condition', 'control')
+H1_results <- deseq_results(ifnb_filtered_metadata_H1, ifnb_filtered_count_matrix_H1, 'condition', 'control')
+```
+
+```{r}
+WTC11_results_ENSG <- convert_entrez_to_ensembl(WTC11_results, 'entrez')
+```
+```{r}
+WTC11_genes_list <- cbind(WTC11_results_HGNC, WTC11_results_ENSG)
+WTC11_genes_list <- WTC11_genes_list %>%
+  dplyr::select('hgnc','ensembl_gene_id','entrez')
+```
+
+```{r}
+WTC11_gene_positions <- get_gene_coo
+```
+
+
+# Convert NCBI to HGNC symbols and plto volcano plot
+```{r}
+WTC11_results_HGNC <- convert_ncbi_to_hgnc(WTC11_results)
+```
+```{r}
+WTC11_volcano_plot <- create_volcano_plot(WTC11_results_HGNC, title="WTC11-derived microglia: Untreated vs IFNβ-treated")
+WTC11_volcano_plot
+```
+```{r}
+H1_results_HGNC <- convert_ncbi_to_hgnc(H1_results)
+```
+```{r}
+H1_volcano_plot <- create_volcano_plot(H1_results_HGNC, title="H1-derived microglia: Untreated vs IFNβ-treated")
+H1_volcano_plot
+```
+
+#PCA
+```{r}
+ifnb_filtered_metadata <- filter_metadata(ifnb_metadata,'title','group:ch1',n=8, exclude_row = "GSM6255119")
+ifnb_filtered_count_matrix <- filter_non_zero(ifnb_count_matrix,n=2,start=1,end=7)
+pca_plot <- perform_pca_plot(ifnb_filtered_count_matrix, ifnb_filtered_metadata)
+pca_plot
+```
+
+# GSEA
+```{r}
+WTC11_gsea_plot <- perform_gsea_plot(WTC11_results,'h.all.v2024.1.Hs.entrez.gmt')
+WTC11_gsea_plot
+```
+
+```{r}
+H1_gsea_plot <- perform_gsea_plot(H1_results,'h.all.v2024.1.Hs.entrez.gmt')
+H1_gsea_plot
+```
+
+
+
+
+
+
+
+
+## CRE Gene Mapping 
+
+# Get the mapped bed files 
+```{r}
+WTC11_closest_results <- read.table("../Gene_Mapping/results/WTC11.closest.bed", header=FALSE, sep = '\t')
+colnames(WTC11_closest_results) <- c("CRE_chr", "CRE_start", "CRE_end", "CRE_log2FC", 
+                                "TSS_chr", "TSS_start", "TSS_end", "TSS_strand", 
+                                "Gene_name", "Gene_ID", "Gene_start", "Gene_end", "Distance")
+
+```
+```{r}
+H1_closest_results <- read.table("../Gene_Mapping/results/H1.closest.bed", header=FALSE, sep = '\t')
+colnames(H1_closest_results) <- c("CRE_chr", "CRE_start", "CRE_end", "CRE_log2FC", 
+                                "TSS_chr", "TSS_start", "TSS_end", "TSS_strand", 
+                                "Gene_name", "Gene_ID", "Gene_start", "Gene_end", "Distance")
+```
+
+
+# Remove version in ensembl id and convert to entrez id
+```{r}
+WTC11_closest_results$Gene_ID <- gsub("\\..*", "", WTC11_closest_results$Gene_ID)
+```
+```{r}
+H1_closest_results$Gene_ID <- gsub("\\..*", "", H1_closest_results$Gene_ID)
+```
+
+# Correlation between distance and CRELogFC
+```{r}
+WTC11_closest_results$distance_cor <- cut(abs(WTC11_closest_results$Distance), 
+                             breaks = c(-1, 1000, 10000, 100000, Inf),
+                             labels = c("0-1kb", "1-10kb", "10-100kb", ">100kb"))
+WTC11_closest_results %>%
+  group_by(distance_cor) %>%
+  summarise(pearson = cor(Distance, CRE_log2FC, method = "pearson", use = "complete.obs"),
+            spearman = cor(Distance, CRE_log2FC, method = "spearman", use = "complete.obs"),
+            n=n())
+```
+```{r}
+H1_closest_results$distance_cor <- cut(abs(H1_closest_results$Distance), 
+                             breaks = c(-1, 1000, 10000, 100000, Inf),
+                             labels = c("0-1kb", "1-10kb", "10-100kb", ">100kb"))
+
+H1_closest_results %>%
+  group_by(distance_cor) %>%
+  summarise(pearson = cor(Distance, CRE_log2FC, method = "pearson", use = "complete.obs"),
+            spearman = cor(Distance, CRE_log2FC, method = "spearman", use = "complete.obs"),
+            n = n())
+```
+
+# Filter out distance > 100kb
+```{r}
+WTC11_closest_100 <- WTC11_closest_results %>%
+  filter(Distance < 100000)
+H1_closest_100 <- H1_closest_results %>%
+  filter(Distance < 100000)
+```
+
+# Group mapped cres based on gene, compute average creLog2FC, choose the row with the max creLogFC as the representative, then replace its creLogFC with the computed average
+```{r}
+avg_log2FC_per_gene <- WTC11_closest_results %>% # changed to 100
+  group_by(Gene_ID) %>%
+  summarise(avg_log2FC = mean(CRE_log2FC, na.rm = TRUE), avg_distance = mean(Distance, na.rm = TRUE), .groups = "drop")
+
+WTC11_avg_cre <- WTC11_closest_results %>% # changed to 100
+  group_by(Gene_ID) %>%
+  slice_max(order_by = abs(CRE_log2FC), n = 1, with_ties = FALSE) %>%
+  ungroup()
+WTC11_avg_cre$avg_CRE_log2FC <- avg_log2FC_per_gene$avg_log2FC[match(WTC11_avg_cre$Gene_ID, avg_log2FC_per_gene$Gene_ID)]
+WTC11_avg_cre$avg_distance <- avg_log2FC_per_gene$avg_distance[match(WTC11_avg_cre$Gene_ID, avg_log2FC_per_gene$Gene_ID)]
+```
+
+```{r}
+H1_avg_log2FC_per_gene <- H1_closest_results %>%
+  group_by(Gene_ID) %>%
+  summarise(avg_log2FC = mean(CRE_log2FC, na.rm = TRUE),avg_distance = mean(Distance, na.rm = TRUE), .groups = "drop")
+H1_avg_cre <- H1_closest_results %>%
+  group_by(Gene_ID) %>%
+  slice_max(order_by = abs(CRE_log2FC), n = 1, with_ties = FALSE) %>%
+  ungroup()
+H1_avg_cre$avg_CRE_log2FC <- H1_avg_log2FC_per_gene$avg_log2FC[match(H1_avg_cre$Gene_ID, H1_avg_log2FC_per_gene$Gene_ID)]
+H1_avg_cre$avg_distance <- H1_avg_log2FC_per_gene$avg_distance[match(H1_avg_cre$Gene_ID, H1_avg_log2FC_per_gene$Gene_ID)]
+```
+
+
+# Convert entrez id to ensembl ids
+```{r}
+#WTC11_results <- WTC11_results %>%
+  #rownames_to_column(var='entrez_id')
+WTC11_results_Ensembl <- convert_entrez_to_ensembl(WTC11_results, 'entrez_id')
+WTC11_results_Ensembl <- WTC11_results_Ensembl[!is.na(WTC11_results_Ensembl$ensembl_gene_id), ]
+```
+```{r}
+H1_results <- H1_results %>%
+  rownames_to_column(var='entrez_id')
+H1_results_Ensembl <- convert_entrez_to_ensembl(H1_results, 'entrez_id')
+H1_results_Ensembl <- H1_results_Ensembl[!is.na(H1_results_Ensembl$ensembl_gene_id), ]
+```
+
+# Merge cre mapping results and dea results based on ensembl ids
+```{r}
+WTC11_merged <- merge(WTC11_avg_cre, WTC11_results_Ensembl, by.x = "Gene_ID", by.y = "ensembl_gene_id")
+```
+```{r}
+H1_merged <- merge(H1_avg_cre, H1_results_Ensembl, by.x = "Gene_ID", by.y = "ensembl_gene_id")
+```
+
+
+# WTC11 CRE_Log2FC vs log2FC plot
+```{r}
+ggplot(WTC11_merged, aes(x = log2FoldChange, y = avg_CRE_log2FC)) +
+  geom_point(aes(color = avg_CRE_log2FC),size = 2, alpha = 0.6) +  # Plot points with color based on CRE_log2FC
+  labs(
+    title = "WTC11 log2FC vs. Average CRE_log2FC",
+    x = "Average CRE log2FC per gene",
+    y = "log2FC"
+  ) +
+  theme_minimal() +  # Clean minimal theme
+  theme(
+    plot.title = element_text(hjust = 0.5),  # Center the title
+    axis.title = element_text(size = 12),  # Axis title size
+    axis.text = element_text(size = 10)  # Axis text size
+  )
+```
+
+# H1 CRE_Log2FC vs log2FC plot
+```{r}
+ggplot(H1_merged, aes(x = log2FoldChange, y = avg_CRE_log2FC)) +
+  geom_point(aes(color = CRE_log2FC), size = 2, alpha = 0.6) +  # Plot points with color based on CRE_log2FC
+  labs(
+    title = "H1 log2FC vs Average_CRE_log2FC",
+    x = "Average CRE log2FC",
+    y = "log2FC"
+  ) +
+  theme_minimal() +  # Clean minimal theme
+  theme(
+    plot.title = element_text(hjust = 0.5),  # Center the title
+    axis.title = element_text(size = 12),  # Axis title size
+    axis.text = element_text(size = 10)  # Axis text size
+  )
+```
+
+# Correlation Analysis 
+```{r}
+WTC11_pearson_cor <- cor(WTC11_merged$log2FoldChange, WTC11_merged$avg_CRE_log2FC, method = "pearson", use = "complete.obs")
+print(paste("Pearson correlation:", WTC11_pearson_cor))
+
+# 2. Calculate Spearman correlation (monotonic relationship, less sensitive to outliers)
+WTC11_spearman_cor <- cor(WTC11_merged$log2FoldChange, WTC11_merged$avg_CRE_log2FC, method = "spearman", use = "complete.obs")
+print(paste("Spearman correlation:", WTC11_spearman_cor))
+
+# 3. Perform correlation test to get p-value
+WTC11_cor_test <- cor.test(WTC11_merged$log2FoldChange, WTC11_merged$avg_CRE_log2FC)
+print(WTC11_cor_test)
+```
+```{r}
+H1_pearson_cor <- cor(H1_merged$log2FoldChange, H1_merged$avg_CRE_log2FC, method = "pearson", use = "complete.obs")
+print(paste("Pearson correlation:", H1_pearson_cor))
+
+# 2. Calculate Spearman correlation (monotonic relationship, less sensitive to outliers)
+H1_spearman_cor <- cor(H1_merged$log2FoldChange, H1_merged$avg_CRE_log2FC, method = "spearman", use = "complete.obs")
+print(paste("Spearman correlation:", H1_spearman_cor))
+
+# 3. Perform correlation test to get p-value
+H1_cor_test <- cor.test(H1_merged$log2FoldChange, H1_merged$avg_CRE_log2FC)
+print(H1_cor_test)
+```
+# Correlation with <100 kb filtered out
+```{r}
+WTC11_pearson_cor <- cor(WTC11_merged$log2FoldChange, WTC11_merged$avg_CRE_log2FC, method = "pearson", use = "complete.obs")
+print(paste("Pearson correlation:", WTC11_pearson_cor))
+
+# 2. Calculate Spearman correlation (monotonic relationship, less sensitive to outliers)
+WTC11_spearman_cor <- cor(WTC11_merged$log2FoldChange, WTC11_merged$avg_CRE_log2FC, method = "spearman", use = "complete.obs")
+print(paste("Spearman correlation:", WTC11_spearman_cor))
+
+# 3. Perform correlation test to get p-value
+WTC11_cor_test <- cor.test(WTC11_merged$log2FoldChange, WTC11_merged$avg_CRE_log2FC)
+print(WTC11_cor_test)
+```
+```{r}
+H1_pearson_cor <- cor(H1_merged$log2FoldChange, H1_merged$avg_CRE_log2FC, method = "pearson", use = "complete.obs")
+print(paste("Pearson correlation:", H1_pearson_cor))
+
+# 2. Calculate Spearman correlation (monotonic relationship, less sensitive to outliers)
+H1_spearman_cor <- cor(H1_merged$log2FoldChange, H1_merged$avg_CRE_log2FC, method = "spearman", use = "complete.obs")
+print(paste("Spearman correlation:", H1_spearman_cor))
+
+# 3. Perform correlation test to get p-value
+H1_cor_test <- cor.test(H1_merged$log2FoldChange, H1_merged$avg_CRE_log2FC)
+print(H1_cor_test)
+```
+
+
+# Correlation by distance
+```{r}
+WTC11_merged$distance_group <- cut(abs(WTC11_merged$avg_distance), 
+                                 breaks = c(-1, 1000, 10000, 100000, Inf),
+                                 labels = c("0-1kb", "1-10kb", "10-100kb", ">100kb"))
+
+# Calculate correlation for each group
+WTC11_merged %>%
+  group_by(distance_group) %>%
+  summarise(pearson = cor(log2FoldChange, avg_CRE_log2FC, method = "pearson", use = "complete.obs"),
+            spearman = cor(log2FoldChange, avg_CRE_log2FC, method = "spearman", use = "complete.obs"),
+            n = n())
+```
+```{r}
+H1_merged$distance_group <- cut(abs(H1_merged$avg_distance), 
+                                 breaks = c(-1, 1000, 10000, 100000, Inf),
+                                 labels = c("0-1kb", "1-10kb", "10-100kb", ">100kb"))
+
+# Calculate correlation for each group
+H1_merged %>%
+  group_by(distance_group) %>%
+  summarise(pearson = cor(log2FoldChange, avg_CRE_log2FC, method = "pearson", use = "complete.obs"),
+            spearman = cor(log2FoldChange, avg_CRE_log2FC, method = "spearman", use = "complete.obs"),
+            n = n())
+```
+
+
+
+## CRE gsea analysis 
+
+# WTC11 GSEA based on rank of CRE against MSigDB C3 - see what transcription factors regulate these genes based on CRE bound 
+```{r}
+WTC11_regulatory_gsea <- regulatory_gsea_plot(WTC11_avg_cre, 'c3.tft.tft_legacy.v2024.1.Hs.symbols.gmt')
+WTC11_regulatory_gsea
+```
+```{r}
+H1_regulatory_gsea <- regulatory_gsea_plot(H1_avg_cre, 'c3.tft.tft_legacy.v2024.1.Hs.symbols.gmt')
+H1_regulatory_gsea
+```
+# Run GSEA against upregulated and downregulated genes
+# Generate GMT files
+```{r}
+WTC11_upregulated_genes <- WTC11_results_Ensembl %>%
+  filter(!is.na(padj)) %>%
+  filter(log2FoldChange > 1 & padj < 0.05) %>%
+  dplyr::select(ensembl_gene_id)
+WTC11_downregulated_genes <- WTC11_results_Ensembl %>%
+  filter(!is.na(padj)) %>%
+  filter(log2FoldChange < -1 & padj < 0.05) %>%
+  dplyr::select(ensembl_gene_id)
+```
+```{r}
+# Define the output file
+gmt_file <- "ifnb_WTC11_genes.gmt"
+file_conn <- file(gmt_file, "w")
+cat("WTC11_Upregulated\tCustom_Up_Pathway\t", paste(WTC11_upregulated_genes$ensembl_gene_id, collapse = "\t"), "\n", file = file_conn)
+cat("WTC11_Downregulated\tCustom_Down_Pathway\t", paste(WTC11_downregulated_genes$ensembl_gene_id, collapse = "\t"), "\n", file = file_conn)
+close(file_conn)
+```
+
+```{r}
+H1_upregulated_genes <- H1_results_Ensembl %>%
+  filter(!is.na(padj)) %>%
+  filter(log2FoldChange > 1 & padj < 0.05) %>%
+  dplyr::select(ensembl_gene_id)
+
+H1_downregulated_genes <- H1_results_Ensembl %>%
+  filter(!is.na(padj)) %>%
+  filter(log2FoldChange < -1 & padj < 0.05) %>%
+  dplyr::select(ensembl_gene_id)
+
+gmt_file <- "ifnb_H1_genes.gmt"
+file_conn <- file(gmt_file, "w")
+
+# Write Upregulated Genes pathway
+cat("H1_Upregulated\tCustom_Up_Pathway\t", paste(H1_upregulated_genes$ensembl_gene_id, collapse = "\t"), "\n", file = file_conn)
+
+# Write Downregulated Genes pathway
+cat("H1_Downregulated\tCustom_Down_Pathway\t", paste(H1_downregulated_genes$ensembl_gene_id, collapse = "\t"), "\n", file = file_conn)
+
+# Close file connection
+close(file_conn)
+```
+
+# Run GSEA against upregulated and downregulated genes ranked based on average cre logFC
+```{r}
+hallmark_geneset <- gmtPathways('ifnb_WTC11_genes.gmt')
+
+# Rank genes based on log2FoldChange from DESeq2 results
+ranked_genes <- H1_avg_cre %>%
+  filter(!is.na(avg_CRE_log2FC)) %>%
+  arrange(desc(avg_CRE_log2FC)) %>%
+  dplyr::select(Gene_ID, avg_CRE_log2FC)
+
+rank <- setNames(ranked_genes$avg_CRE_log2FC, ranked_genes$Gene_ID)
+
+# Run fgsea
+fgsea_res <- fgsea(
+  pathways = hallmark_geneset,
+  stats = rank,
+  minSize = 0, 
+  maxSize = 1500
+) %>% arrange(desc(NES))  # Sort results by NES
+
+# Separate positive and negative pathways
+positive_pathways <- fgsea_res %>% filter(NES > 0)
+negative_pathways <- fgsea_res %>% filter(NES < 0)
+
+# Select top pathways
+top_pos <- positive_pathways %>% arrange(desc(NES)) %>% slice_head(n = 5)
+top_neg <- negative_pathways %>% arrange(NES) %>% slice_head(n = 5)
+
+# Combine and label pathways
+pathways_tog <- bind_rows(top_pos, top_neg) %>%
+  mutate(condition = if_else(NES > 0, "positive", "negative"))
+
+WTC11_gsea_plot <- ggplot(pathways_tog, aes(x = reorder(pathway, NES), y = NES, fill = condition)) +
+  geom_col(width = 0.7) +
+  geom_hline(yintercept = 0, color = "black", linewidth = 0.5) +
+  coord_flip() +
+  scale_fill_manual(
+    values = c('positive' = '#FF8282', 'negative' = '#0072B2'),
+    labels = c('Negative NES', 'Positive NES'),
+    name = "Direction"
+  ) +
+  labs(
+    title = "WTC11 Regulatory GSEA Pathway Enrichment",
+    x = NULL,
+    y = "Normalized Enrichment Score (NES)",
+    caption = paste0("Top 1 significantly enriched pathways per direction")
+  ) +
+  theme_bw(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5, size = 14),
+    axis.title.x = element_text(face = "bold", size = 12),
+    axis.text.y = element_text(face = "plain", size = 10, color = "black"),
+    axis.text.x = element_text(face = "plain", size = 10, color = "black"),
+    legend.position = "top",
+    legend.title = element_text(face = "bold", size = 10),
+    legend.text = element_text(size = 9),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor = element_blank(),
+    plot.caption = element_text(size = 9, color = "gray40", hjust = 0),
+    plot.margin = unit(c(1,1,1,1), "cm")
+  ) +
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.05))) +
+  scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = 40))
+WTC11_gsea_plot
+```
+# Check out key contributing genes
+```{r}
+fgsea_res %>% 
+  filter(pathway == "WTC11_Upregulated") %>%
+  pull(leadingEdge)
+```
+
+
+```{r}
+hallmark_geneset <- gmtPathways('ifnb_H1_genes.gmt')
+
+# Rank genes based on log2FoldChange from DESeq2 results
+ranked_genes <- H1_avg_cre %>%
+  filter(!is.na(avg_CRE_log2FC)) %>%
+  arrange(desc(avg_CRE_log2FC)) %>%
+  dplyr::select(Gene_ID, avg_CRE_log2FC)
+
+rank <- setNames(ranked_genes$avg_CRE_log2FC, ranked_genes$Gene_ID)
+
+# Run fgsea
+fgsea_res <- fgsea(
+  pathways = hallmark_geneset,
+  stats = rank,
+  minSize = 0, 
+  maxSize = 2000
+) %>% arrange(desc(NES))  # Sort results by NES
+
+# Separate positive and negative pathways
+positive_pathways <- fgsea_res %>% filter(NES > 0)
+negative_pathways <- fgsea_res %>% filter(NES < 0)
+
+# Select top pathways
+top_pos <- positive_pathways %>% arrange(desc(NES)) %>% slice_head(n = 5)
+top_neg <- negative_pathways %>% arrange(NES) %>% slice_head(n = 5)
+
+# Combine and label pathways
+pathways_tog <- bind_rows(top_pos, top_neg) %>%
+  mutate(condition = if_else(NES > 0, "positive", "negative"))
+
+gsea_plot <- ggplot(pathways_tog, aes(x = reorder(pathway, NES), y = NES, fill = condition)) +
+  geom_col(width = 0.7) +
+  geom_hline(yintercept = 0, color = "black", linewidth = 0.5) +
+  coord_flip() +
+  scale_fill_manual(
+    values = c('positive' = '#FF8282', 'negative' = '#0072B2'),
+    labels = c('Negative NES', 'Positive NES'),
+    name = "Direction"
+  ) +
+  labs(
+    title = "H1 Regulatory GSEA Pathway Enrichment",
+    x = NULL,
+    y = "Normalized Enrichment Score (NES)",
+    caption = paste0("Top 1 significantly enriched pathways per direction")
+  ) +
+  theme_bw(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5, size = 14),
+    axis.title.x = element_text(face = "bold", size = 12),
+    axis.text.y = element_text(face = "plain", size = 10, color = "black"),
+    axis.text.x = element_text(face = "plain", size = 10, color = "black"),
+    legend.position = "top",
+    legend.title = element_text(face = "bold", size = 10),
+    legend.text = element_text(size = 9),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor = element_blank(),
+    plot.caption = element_text(size = 9, color = "gray40", hjust = 0),
+    plot.margin = unit(c(1,1,1,1), "cm")
+  ) +
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.05))) +
+  scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = 40))
+gsea_plot
+```
+
+
+# CREs for database
+
+# BED files
+```{r}
+WTC11_cres <- read.delim("/Users/nathan/Desktop/Bioinformatics/Projects/AD_Database/Gene_Mapping/results/WTC11.closest.bed", header = FALSE, sep = "\t")
+H1_cres <- read.delim("/Users/nathan/Desktop/Bioinformatics/Projects/AD_Database/Gene_Mapping/results/H1.closest.bed", header = FALSE, sep = "\t")
+```
+
+```{r}
+# All CREs
+all_cres <- read_tsv("/Users/nathan/Desktop/Bioinformatics/Projects/AD_Database/Gene_Mapping/refs/TFBSlog2FCsum_mergedCRE_deAD_sigTF_top0.05dis_neat.txt")
+```
+
+```{r}
+names(all_cres)[3:ncol(all_cres)] <- names(all_cres)[3:ncol(all_cres)] %>%
+  str_replace_all("_.*?_", "_")
+```
+
+```{r}
+unique_cres <- all_cres[, 1:3]
+
+```
+```{r}
+cres_tf <- all_cres[, 4:2106]
+```
+
+```{r}
+write.csv(unique_cres, 'unique_cres.csv')
+```
+```{r}
+write.csv(cres_tf, 'cres_tf.csv')
+```
+
